@@ -1,14 +1,16 @@
 package com.Todo.Controller;
 
-import com.Todo.DTO.AuthRequest;
+import com.Todo.DTO.AuthRequestDTO;
 import com.Todo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-
+@RequestMapping("/auth")
 public class AuthController {
 
     @Autowired
@@ -18,15 +20,15 @@ public class AuthController {
     private AuthenticationManager authManager;
 
 
-    @PostMapping("/auth")
-    public String authenticate(@RequestBody AuthRequest authRequest) throws Exception{
+    @PostMapping("/login")
+    public ResponseEntity<?> authenticate(@RequestBody AuthRequestDTO authRequestDTO) throws Exception{
         try{
             authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(),authRequest.getPassword())
+                    new UsernamePasswordAuthenticationToken(authRequestDTO.getUsername(), authRequestDTO.getPassword())
             );
         }catch (Exception ex){
-            throw new Exception("Invalid username or password");
+            return new ResponseEntity<>("invalid credentials", HttpStatus.UNAUTHORIZED);
         }
-        return jwtUtil.generateToken(authRequest.getUsername());
+        return new ResponseEntity<>(jwtUtil.generateToken(authRequestDTO.getUsername()), HttpStatus.OK);
     }
 }
