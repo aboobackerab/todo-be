@@ -2,6 +2,9 @@ package com.Todo.util;
 
 
 import com.Todo.DTO.MailDTO;
+import com.Todo.Entity.Otp;
+import com.Todo.Repo.OtpRepo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -13,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+@Slf4j
 @Component
 public class MailUtil {
 
@@ -31,9 +35,12 @@ public class MailUtil {
     @Autowired
     RestTemplate restTemplate;
 
+    @Autowired
+    private OtpRepo otpRepo;
 
 
-    public MailDTO createMailDTO(String username, String email) {
+
+    public MailDTO createMailDTO(String username, String email, Integer otp) {
         MailDTO mailjetMessage = new MailDTO();
 
         MailDTO.Message message = new MailDTO.Message();
@@ -53,7 +60,7 @@ public class MailUtil {
 
         message.setSubject("OTP Verification Code");
         message.setTextPart("Greetings from TODO!");
-        message.setHTMLPart("<h3>Dear "+ username+","+ "welcome to TODO!</h3><br />Your One Time Password is  "+"<h2>"+generateRandomSixDigitNumber()+"</h2>");
+        message.setHTMLPart("<h3>Dear "+ username+","+ "welcome to TODO!</h3><br />Your One Time Password is  "+"<h2>"+otp+"</h2>");
 
         List<MailDTO.Message> messageList = new ArrayList<>();
         messageList.add(message);
@@ -69,7 +76,8 @@ public class MailUtil {
     }
 
     public boolean sendOTPMail(String username, String email){
-        MailDTO mailDTO = createMailDTO(username, email);
+        Integer otp = generateRandomSixDigitNumber();
+        MailDTO mailDTO = createMailDTO(username, email, otp);
         try{
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -77,12 +85,19 @@ public class MailUtil {
             HttpEntity<MailDTO> entity = new HttpEntity<>(mailDTO, httpHeaders);
 
             ResponseEntity<Object> response = restTemplate.exchange(api, HttpMethod.POST, entity, Object.class);
-            System.out.println(response.getStatusCode().value());
+            boolean resp = response.getStatusCode().value() == 200;
+            if(resp){
+                Otp otpObject = new Otp();
+                otpObject.setOtp(otp);
+                otpObject.setEmail(email);
+                otpObject.setVerified(0);
+                otpRepo.save(otpObject);
+            }
+            return resp;
         }catch (Exception exception){
-            System.out.println("failed");
+            log.info("email sending for verification has failed");
             return false;
         }
-        return true;
     }
 
 }

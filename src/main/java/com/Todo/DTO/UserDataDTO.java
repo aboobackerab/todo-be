@@ -15,4 +15,6 @@ public class UserDataDTO {
     private String firstName;
 
     private String lastName;
+
+    private Integer verified;
 }
