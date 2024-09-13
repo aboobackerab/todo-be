@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
         Optional<UserData> userDataOPtional = userDataRepo.findByEmail(email);
         if(!userDataOPtional.isEmpty()){
             log.info("email already exist : {}", email);
-            throw new EmailAlreadyExistException("Email Already Exist" + email);
+            throw new EmailAlreadyExistException("Email Already Exist " + email);
         }
         String username = generateUsernameWithUUID(userDataDTO.getFirstName());
         userDataDTO.setUsername(username.toLowerCase());

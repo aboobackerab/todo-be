@@ -60,7 +60,7 @@ public class MailUtil {
 
         message.setSubject("OTP Verification Code");
         message.setTextPart("Greetings from TODO!");
-        message.setHTMLPart("<h3>Dear "+ username+","+ "welcome to TODO!</h3><br />Your One Time Password is  "+"<h2>"+otp+"</h2>");
+        message.setHTMLPart("<h3>Dear "+ username+","+ "welcome to TODO!</h3><br />Your One Time Password is  "+"<h2>"+otp+"</h2> <br><br> <i>Note: The username in this mail should be used for signing in.<b>"+username+"</b></i>");
 
         List<MailDTO.Message> messageList = new ArrayList<>();
         messageList.add(message);
