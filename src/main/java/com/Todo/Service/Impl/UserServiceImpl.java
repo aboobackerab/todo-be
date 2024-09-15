@@ -1,11 +1,16 @@
 package com.Todo.Service.Impl;
 
 import com.Todo.DTO.UserDataDTO;
+import com.Todo.DTO.VerifyDTO;
+import com.Todo.Entity.Otp;
 import com.Todo.Entity.UserData;
+import com.Todo.Repo.OtpRepo;
 import com.Todo.Repo.UserDataRepo;
 import com.Todo.Service.UserService;
+import com.Todo.exceptions.BadRequestException;
 import com.Todo.exceptions.EmailAlreadyExistException;
 import com.Todo.exceptions.UserAdditionException;
+import com.Todo.exceptions.UserNotExistException;
 import com.Todo.util.MailUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +31,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserDataRepo userDataRepo;
+
+    @Autowired
+    private OtpRepo otpRepo;
 
     @Autowired
     MailUtil mailUtil;
@@ -53,5 +61,31 @@ public class UserServiceImpl implements UserService {
     public static String generateUsernameWithUUID(String name) {
         String uuid = UUID.randomUUID().toString();
         return name + "_" + uuid.substring(0, 4);
+    }
+
+
+    @Override
+    public ResponseEntity<?> verifyUser(VerifyDTO verifyDTO) {
+        Optional<UserData> userDataOptional = userDataRepo.findByEmail(verifyDTO.getEmail());
+        if(userDataOptional.isPresent()){
+            Optional<Otp> otpOptional = otpRepo.findByEmail(verifyDTO.getEmail());
+            if(otpOptional.isPresent()){
+                if(otpOptional.get().getOtp() == Integer.parseInt(verifyDTO.getOtp())){
+                    Otp otp = otpOptional.get();
+                    otp.setVerified(1);
+                    UserData userData = userDataOptional.get();
+                    userData.setVerified(1);
+                    userDataRepo.save(userData);
+                    otpRepo.save(otp);
+                    return new ResponseEntity<>(true, HttpStatus.OK);
+                }else {
+                    throw new BadRequestException(" The Otp you have entered is incorrect");
+                }
+            }else{
+                throw new BadRequestException("Some thing went wrong please try again later");
+            }
+        }else{
+            throw new UserNotExistException("User with email: "+ verifyDTO.getEmail() + " does not exist");
+        }
     }
 }
