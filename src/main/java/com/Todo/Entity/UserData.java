@@ -29,5 +29,5 @@ public class UserData {
 
     private String lastName;
 
-    private String verified;
+    private Integer verified;
 }
